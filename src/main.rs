@@ -1,4 +1,5 @@
 use chrono::Utc;
+use matrix_sdk::ruma::RoomId;
 use matrix_sdk::{
     config::SyncSettings,
     ruma::events::room::{
@@ -93,6 +94,9 @@ async fn login_and_sync(
     // we can react on it
     client.add_event_handler(on_room_message);
 
+    // Add loop here
+    start_news_thread(&client).await;
+
     // since we called `sync_once` before we entered our sync loop we must pass
     // that sync token to `sync`
     let settings = SyncSettings::default().token(sync_token);
@@ -167,31 +171,64 @@ async fn on_room_message(event: OriginalSyncRoomMessageEvent, room: Room) {
         println!("message sent");
     }
     if text_content.body == "!news" {
-        let result = tokio::task::spawn_blocking(move || {
-            let mut tagesschau = Tagesschau::new();
-            tagesschau.fetch()
-        }).await;
-
-        let content = match result {
-            Ok(Ok(news)) => {
-                let now = Utc::now();
-                let formatted_date = now.format("%d.%m.%Y");
-                let content = format!(
-                    "🌐 Top 3 News Today | {}\n\n{}", // Add extra line break after the header
-                    formatted_date,
-                    format!(
-                        "1. {}\n\n2. {}\n\n3. {}\n",
-                        print_news(news.news.get(0).unwrap()),
-                        print_news(news.news.get(1).unwrap()),
-                        print_news(news.news.get(2).unwrap())
-                    )
-                );
-                RoomMessageEventContent::text_plain(content)
-            }
-            _ => RoomMessageEventContent::text_plain("Error!"),
-        };
+        let content = build_news_msg().await;
         room.send(content).await.unwrap();
     }
+}
+
+async fn start_news_thread(client: &Client) {
+    let room_id = RoomId::parse("!hFekksusgjPusUvBbO:matrix.familyhainz.de")
+        .expect("Can't parse room!");
+    let room = client.get_room(&room_id)
+        .expect("Failed to get room!");
+
+    let mut time_till_news = 1;
+
+    let msg = format!("Sending news in {} minutes...", time_till_news);
+    let content = RoomMessageEventContent::text_plain(msg);
+    if let Err(e) = room.send(content).await {
+        eprintln!("Failed to send message! {}", e);
+    }
+
+    // new thread
+    tokio::spawn(async move {
+        loop {
+            println!("Sleeping for {} minutes...", time_till_news);
+            sleep(Duration::from_secs(time_till_news * 60)).await;
+            let news_msg = build_news_msg().await;
+            if let Err(e) = room.send(news_msg).await {
+                eprintln!("Failed to send message! {}", e);
+            }
+            time_till_news = 24 * 60 * 60;
+        }
+    });
+}
+
+async fn build_news_msg() -> RoomMessageEventContent {
+    let result = tokio::task::spawn_blocking(move || {
+        let mut tagesschau = Tagesschau::new();
+        tagesschau.fetch()
+    }).await;
+
+    let content = match result {
+        Ok(Ok(news)) => {
+            let now = Utc::now();
+            let formatted_date = now.format("%d.%m.%Y");
+            let content = format!(
+                "🌐 Top 3 News Today | {}\n\n{}", // Add extra line break after the header
+                formatted_date,
+                format!(
+                    "1. {}\n\n2. {}\n\n3. {}\n",
+                    print_news(news.news.get(0).unwrap()),
+                    print_news(news.news.get(1).unwrap()),
+                    print_news(news.news.get(2).unwrap())
+                )
+            );
+            RoomMessageEventContent::text_plain(content)
+        }
+        _ => RoomMessageEventContent::text_plain("Error!"),
+    };
+    content
 }
 
 fn print_news(news: &News) -> String {
