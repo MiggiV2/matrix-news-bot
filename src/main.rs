@@ -27,11 +27,11 @@ use tokio::time::{sleep, Duration};
 /// This is the starting point of the app. `main` is called by rust binaries to
 /// run the program in this case, we use tokio (a reactor) to allow us to use
 /// an `async` function run.
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // set up some simple stderr logging. You can configure it by changing the env
     // var `RUST_LOG`
-    tracing_subscriber::fmt::init();
+    //tracing_subscriber::fmt::init();
 
     // parse the command line for homeserver, username and password
     let (homeserver_url, username, password) =
@@ -57,7 +57,7 @@ async fn login_and_sync(
     homeserver_url: String,
     username: &str,
     password: &str,
-) -> anyhow::Result<()> {
+) -> Result<(), Box<dyn std::error::Error>> {
     // First, we set up the client.
 
     // Note that when encryption is enabled, you should use a persistent store to be
