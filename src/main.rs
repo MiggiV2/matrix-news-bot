@@ -166,7 +166,7 @@ async fn on_room_message(event: OriginalSyncRoomMessageEvent, room: Room) {
 
         println!("message sent");
     }
-    if text_content.body.contains("!news") {
+    if text_content.body == "!news" {
         let result = tokio::task::spawn_blocking(move || {
             let mut tagesschau = Tagesschau::new();
             tagesschau.fetch()
