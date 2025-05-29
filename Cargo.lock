@@ -1733,7 +1733,6 @@ dependencies = [
  "async-trait",
  "deadpool-sqlite",
  "itertools 0.14.0",
- "matrix-sdk-base",
  "matrix-sdk-crypto",
  "matrix-sdk-store-encryption",
  "num_cpus",
@@ -1832,7 +1831,6 @@ dependencies = [
  "matrix-sdk",
  "tagesschau-lib",
  "tokio",
- "tracing-subscriber",
 ]
 
 [[package]]

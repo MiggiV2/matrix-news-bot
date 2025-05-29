@@ -31,7 +31,7 @@ use tokio::time::{sleep, Duration};
 async fn main() -> anyhow::Result<()> {
     // set up some simple stderr logging. You can configure it by changing the env
     // var `RUST_LOG`
-    tracing_subscriber::fmt::init();
+    //tracing_subscriber::fmt::init();
 
     // parse the command line for homeserver, username and password
     let (homeserver_url, username, password) =
