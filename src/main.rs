@@ -201,7 +201,7 @@ async fn start_news_thread(client: &Client) {
             if let Err(e) = room.send(news_msg).await {
                 eprintln!("Failed to send message! {}", e);
             }
-            time_till_news = 24 * 60 * 60;
+            time_till_news = 24 * 60;
         }
     });
 }
