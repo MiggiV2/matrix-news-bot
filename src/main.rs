@@ -8,7 +8,9 @@ use matrix_sdk::{
     Client,
 };
 
+use std::time::Duration;
 use std::{env, process::exit};
+use tokio::time::sleep;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -53,8 +55,10 @@ async fn login_and_sync(
     client.add_event_handler(event_handler::on_room_message);
     news_thread::start(&client).await;
 
-    let settings = SyncSettings::default().token(&sync_token);
-    client.sync(settings).await?; // this essentially loops until we kill the bot
-
-    Ok(())
+    loop {
+        let settings = SyncSettings::default().token(&sync_token);
+        let _ = client.sync(settings).await; // this essentially loops until we kill the bot
+        eprintln!("Error on sync! \nReconnecting in 4 min...");
+        sleep(Duration::from_secs(60 * 4)).await;
+    }
 }
