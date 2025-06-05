@@ -1,3 +1,4 @@
+use crate::bot_config::NewBotConfig;
 use crate::news_command;
 use chrono::{Local, NaiveTime};
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
@@ -6,8 +7,8 @@ use matrix_sdk::Client;
 use std::time::Duration;
 use tokio::time::sleep;
 
-pub async fn start(client: &Client) {
-    let room_id = RoomId::parse("!hFekksusgjPusUvBbO:matrix.familyhainz.de")
+pub async fn start(client: &Client, new_bot_config: &NewBotConfig) {
+    let room_id = RoomId::parse(&new_bot_config.matrix_room_id)
         .expect("Can't parse room!");
     let room = client.get_room(&room_id)
         .expect("Failed to get room!");
