@@ -1,0 +1,12 @@
+# Matrix configuration
+matrix_homerserver = "https://matrix.org"
+matrix_username = "news"
+matrix_password = "very_secret"
+matrix_room_id = "room_id"
+
+# News configuration
+news_time = "06:00"
+update_frequency = "daily"
+
+# Optional
+bot_name = "Tagesschau_Bot"
