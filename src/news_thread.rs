@@ -1,3 +1,4 @@
+use crate::bot_config::NewBotConfig;
 use crate::news_command;
 use chrono::{Local, NaiveTime};
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
@@ -6,13 +7,17 @@ use matrix_sdk::Client;
 use std::time::Duration;
 use tokio::time::sleep;
 
-pub async fn start(client: &Client) {
-    let room_id = RoomId::parse("!hFekksusgjPusUvBbO:matrix.familyhainz.de")
+pub async fn start(client: &Client, new_bot_config: &NewBotConfig) {
+    let room_id = RoomId::parse(&new_bot_config.matrix_room_id)
         .expect("Can't parse room!");
     let room = client.get_room(&room_id)
         .expect("Failed to get room!");
 
-    let mut time_till_news = minutes_until(NaiveTime::from_hms_opt(6, 0, 0).unwrap());
+    let target_time = NaiveTime::parse_from_str(&new_bot_config.news_time, "%H:%M")
+        .expect("Failed to parse news_time from config. Expected format: HH:MM");
+    let update_frequency_minutes = parse_duration(&new_bot_config.update_frequency)
+        .expect("Failed to parse update_frequency from config. Expected format: e.g., '24h', '30m'");
+    let mut time_till_news = minutes_until(target_time);
     let minutes = time_till_news % 60;
     let hours = (time_till_news - minutes) / 60;
 
@@ -31,7 +36,7 @@ pub async fn start(client: &Client) {
             if let Err(e) = room.send(news_msg).await {
                 eprintln!("Failed to send message! {}", e);
             }
-            time_till_news = 24 * 60;
+            time_till_news = update_frequency_minutes;
         }
     });
 }
@@ -48,6 +53,24 @@ fn minutes_until(target_time: NaiveTime) -> u64 {
     };
 
     duration.num_minutes() as u64
+}
+
+fn parse_duration(duration_str: &str) -> Result<u64, String> {
+    let duration_str = duration_str.trim();
+    
+    if duration_str.ends_with('h') {
+        let hours = duration_str[..duration_str.len() - 1]
+            .parse::<u64>()
+            .map_err(|_| format!("Invalid hours value in '{}'", duration_str))?;
+        Ok(hours * 60)
+    } else if duration_str.ends_with('m') {
+        let minutes = duration_str[..duration_str.len() - 1]
+            .parse::<u64>()
+            .map_err(|_| format!("Invalid minutes value in '{}'", duration_str))?;
+        Ok(minutes)
+    } else {
+        Err(format!("Duration must end with 'h' (hours) or 'm' (minutes), got: '{}'", duration_str))
+    }
 }
 
 #[cfg(test)]
