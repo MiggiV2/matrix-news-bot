@@ -6,7 +6,7 @@ matrix_room_id = "room_id"
 
 # News configuration
 news_time = "06:00"
-update_frequency = "daily"
+update_frequency = "24h"
 
 # Optional
 bot_name = "Tagesschau_Bot"
