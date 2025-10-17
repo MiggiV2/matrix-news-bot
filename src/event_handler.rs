@@ -38,13 +38,6 @@ pub async fn on_room_message(event: OriginalSyncRoomMessageEvent, room: Room) {
         return;
     }
     let MessageType::Text(text_content) = event.content.msgtype else { return };
-
-    if text_content.body.contains("!party") {
-        let content = RoomMessageEventContent::text_plain("🎉🎊🥳 let's PARTY!! 🥳🎊🎉");
-        println!("sending");
-        room.send(content).await.unwrap();
-        println!("message sent");
-    }
     if text_content.body == "!news" {
         let content = news_command::build_news_msg().await;
         room.send(content).await.unwrap();
