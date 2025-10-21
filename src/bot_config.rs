@@ -13,10 +13,14 @@ pub struct NewBotConfig {
     pub bot_name: String,
 }
 
-pub fn parse_config() -> NewBotConfig {
-    let contents = fs::read_to_string("./config.toml");
+pub fn parse_config(config_path: Option<String>) -> NewBotConfig {
+    let config_path = config_path.unwrap_or_else(|| {
+        "./config.toml".to_string()
+    });
+
+    let contents = fs::read_to_string(&config_path);
     if let Err(e) = &contents {
-        eprintln!("Please provide the config file 'config.toml' -> {}", e);
+        eprintln!("Please provide the config file '{}' -> {}", config_path, e);
         std::process::exit(1);
     }
     let config: Result<NewBotConfig, Error> = toml::from_str(contents.unwrap().as_str());
@@ -33,7 +37,7 @@ mod tests {
 
     #[test]
     fn test_parse_config() {
-        let config = parse_config();
+        let config = parse_config(None);
         assert_eq!(config.matrix_room_id, String::from("room_id"));
     }
 }

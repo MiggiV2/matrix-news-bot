@@ -15,7 +15,8 @@ use tokio::time::sleep;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let bot_config = parse_config();
+    let config_path = std::env::args().nth(1);
+    let bot_config = parse_config(config_path);
 
     // our actual runner
     login_and_sync(bot_config).await?;
